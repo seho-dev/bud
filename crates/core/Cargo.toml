@@ -1,0 +1,19 @@
+[package]
+name    = "core"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+log = { workspace = true }
+thiserror = { workspace = true }
+shared-types = { path = "../shared-types" }
+directories = "6.0"
+env_logger = "0.10.0"
+config = { path = "../config" }
+
+[dev-dependencies]
+
+[lib]
+path = "src/lib.rs"

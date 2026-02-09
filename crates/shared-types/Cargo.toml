@@ -1,0 +1,11 @@
+[package]
+name = "shared-types"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+thiserror = { workspace = true }
+serde = { workspace = true }
+
+[lib]
+path = "src/lib.rs"
