@@ -1,0 +1,87 @@
+#!/usr/bin/env bash
+
+set -e
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+CHECKMARK="✓"
+CROSSMARK="✗"
+INFO="ℹ"
+WARNING="⚠"
+
+print_color() {
+    local color=$1
+    local symbol=$2
+    shift 2
+    echo -e "${color}${symbol} $*${NC}"
+}
+
+print_success() {
+    print_color "$GREEN" "$CHECKMARK" "$@"
+}
+
+print_error() {
+    print_color "$RED" "$CROSSMARK" "$@"
+}
+
+print_info() {
+    print_color "$BLUE" "$INFO" "$@"
+}
+
+print_warning() {
+    print_color "$YELLOW" "$WARNING" "$@"
+}
+
+print_separator() {
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+}
+
+if ! git rev-parse --git-dir > /dev/null 2>&1; then
+    print_error "Not in a Git repository"
+    exit 1
+fi
+
+REPO_ROOT=$(git rev-parse --show-toplevel)
+
+if [ ! -f "$REPO_ROOT/Cargo.toml" ]; then
+    print_error "Cargo.toml not found. Are you in a Rust project?"
+    exit 1
+fi
+
+echo ""
+print_separator
+print_info "Running pre-push hook: Testing workspace before push"
+print_separator
+echo ""
+
+cd "$REPO_ROOT" || exit 1
+
+print_info "Project root: $REPO_ROOT"
+print_info "Running: cargo test --workspace --lib --tests"
+echo ""
+
+if cargo test --workspace --lib --tests; then
+    echo ""
+    print_separator
+    print_success "All tests passed! Push allowed."
+    print_separator
+    echo ""
+    exit 0
+else
+    TEST_EXIT_CODE=$?
+    echo ""
+    print_separator
+    print_error "Tests failed! Push blocked."
+    print_separator
+    echo ""
+    print_info "Fix the failing tests before pushing, or use:"
+    print_warning "git push --no-verify"
+    echo ""
+    print_info "To skip this check (not recommended unless you know what you're doing)"
+    echo ""
+    exit $TEST_EXIT_CODE
+fi
