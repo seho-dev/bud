@@ -1,4 +1,5 @@
 use jsonschema::{Draft, JSONSchema};
+use log::{error, info};
 use serde_json::Value;
 use shared_types::config::ConfigError;
 use std::fs;
@@ -44,7 +45,8 @@ pub fn validate_json(schema: &JSONSchema, value: &Value) -> Result<(), ConfigErr
     let error_messages: Vec<String> = errors
       .map(|e| format!("Path '{}': {}", e.instance_path, e))
       .collect();
-    return Err(ConfigError::ValidationError(error_messages.join("\n")));
+    let combined_errors = error_messages.join("\n");
+    return Err(ConfigError::ValidationError(combined_errors));
   }
   Ok(())
 }

@@ -1,6 +1,7 @@
 ## Base Information
-Project: Bud - Next Generation Plug-in Foundation
-Language: Rust
+- Project: Bud - Next Generation Plug-in Foundation
+- Language: Rust
+- All documentation and comments should be written in **English**
 
 ## Crates Architecture
 

@@ -1,4 +1,4 @@
-use config::{load_all_plugins, load_plugin_config, PLUGIN_CONFIG_FILE};
+use config::{load_all_plugins, load_plugin};
 use directories::ProjectDirs;
 use shared_types::config::{ConfigData, PluginConfigData};
 use shared_types::plugin::PluginError;
@@ -78,17 +78,8 @@ impl PluginManager {
 
     let plugin_dir = self.project_data_path.join(name);
 
-    let config = load_plugin_config(&plugin_dir)
+    let config = load_plugin(&plugin_dir, name)
       .map_err(|e| PluginError::LoadError(format!("Failed to load plugin '{}': {}", name, e)))?;
-
-    if config.name != name {
-      return Err(PluginError::LoadError(format!(
-        "Plugin directory name '{}' does not match {} name '{}'",
-        name,
-        PLUGIN_CONFIG_FILE,
-        config.name
-      )));
-    }
 
     self.plugin_cache.insert(name.to_string(), config);
     Ok(&self.plugin_cache[name])
@@ -172,5 +163,15 @@ mod tests {
         panic!("Unexpected error type: {:?}", e);
       }
     }
+  }
+
+  #[test_log::test]
+  fn test_plugin_manager_get() {
+    let config = Arc::new(create_test_config());
+    let mut manager =
+      PluginManager::new(Arc::clone(&config)).expect("Failed to create PluginManager");
+
+    let result = manager.get("test-plugin");
+    assert!(result.is_err());
   }
 }

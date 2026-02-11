@@ -1,5 +1,5 @@
 use jsonschema::JSONSchema;
-use log::{error, warn};
+use log::{error, info, warn};
 use once_cell::sync::Lazy;
 use shared_types::config::{ConfigError, PluginConfigData};
 use std::collections::HashMap;
@@ -67,8 +67,19 @@ pub fn load_plugin_config<P: AsRef<Path>>(plugin_dir: P) -> Result<PluginConfigD
 }
 
 fn parse_plugin_config<P: AsRef<Path>>(path: P) -> Result<PluginConfigData, ConfigError> {
+  let path_ref = path.as_ref();
+  info!("Loading plugin config from: {}", path_ref.display());
+
   let value = read_and_parse_json(&path)?;
-  validate_json(&COMPILED_PLUGIN_SCHEMA, &value)?;
+
+  if let Err(e) = validate_json(&COMPILED_PLUGIN_SCHEMA, &value) {
+    error!(
+      "Plugin config validation failed for '{}': {}",
+      path_ref.display(),
+      e
+    );
+    return Err(e);
+  }
 
   let config: PluginConfigData =
     serde_json::from_value(value).map_err(|e| ConfigError::ParseError(e.to_string()))?;
@@ -132,16 +143,9 @@ pub fn load_all_plugins<P: AsRef<Path>>(
       .and_then(|n| n.to_str())
       .unwrap_or("unknown");
 
-    match load_plugin_config(&path) {
+    match load_plugin(&path, plugin_name) {
       Ok(config) => {
         let config_name = config.name.clone();
-
-        if config_name != plugin_name {
-          warn!(
-            "Plugin directory name '{}' does not match {} name '{}'",
-            plugin_name, PLUGIN_CONFIG_FILE, config_name
-          );
-        }
 
         if plugins.insert(config_name.clone(), config).is_some() {
           error!("Duplicate plugin name detected: {}", config_name);
@@ -162,4 +166,37 @@ pub fn load_all_plugins<P: AsRef<Path>>(
   }
 
   Ok(plugins)
+}
+
+/// Loads plugin configuration from the specified directory and validates name matching
+///
+/// # Arguments
+///
+/// * `plugin_dir` - Path to the plugin directory
+/// * `expected_name` - Expected plugin name (typically the directory name)
+///
+/// # Returns
+///
+/// Returns the parsed plugin configuration on success
+///
+/// # Errors
+///
+/// - plugin.json not found: `ConfigError::FileNotFound`
+/// - JSON parse failure: `ConfigError::ParseError`
+/// - Schema validation failure: `ConfigError::ValidationError`
+/// - Name mismatch: `ConfigError::ValidationError`
+pub fn load_plugin<P: AsRef<Path>>(
+  plugin_dir: P,
+  expected_name: &str,
+) -> Result<PluginConfigData, ConfigError> {
+  let config: PluginConfigData = load_plugin_config(&plugin_dir)?;
+
+  if config.name != expected_name {
+    return Err(ConfigError::ValidationError(format!(
+      "Plugin directory name '{}' does not match {} name '{}'",
+      expected_name, PLUGIN_CONFIG_FILE, config.name
+    )));
+  }
+
+  Ok(config)
 }
