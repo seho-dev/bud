@@ -8,7 +8,7 @@ use std::path::Path;
 
 use crate::common::{compile_schema, read_and_parse_json, validate_json};
 
-const PLUGIN_CONFIG_FILE: &str = "plugin.json";
+pub const PLUGIN_CONFIG_FILE: &str = "plugin.json";
 
 static PLUGIN_SCHEMA: &str = r#"{
   "type": "object",

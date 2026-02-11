@@ -1,3 +1,4 @@
+use config::{load_all_plugins, load_plugin_config, PLUGIN_CONFIG_FILE};
 use directories::ProjectDirs;
 use shared_types::config::{ConfigData, PluginConfigData};
 use shared_types::plugin::PluginError;
@@ -46,7 +47,7 @@ impl PluginManager {
   /// - Plugins directory not found: `PluginError::LoadError`
   /// - All plugins failed to load: `PluginError::LoadError`
   pub fn get_all(&mut self) -> Result<usize> {
-    let plugins = config::load_all_plugins(&self.project_data_path)
+    let plugins = load_all_plugins(&self.project_data_path)
       .map_err(|e| PluginError::LoadError(e.to_string()))?;
 
     let count = plugins.len();
@@ -77,13 +78,15 @@ impl PluginManager {
 
     let plugin_dir = self.project_data_path.join(name);
 
-    let config = config::load_plugin_config(&plugin_dir)
+    let config = load_plugin_config(&plugin_dir)
       .map_err(|e| PluginError::LoadError(format!("Failed to load plugin '{}': {}", name, e)))?;
 
     if config.name != name {
       return Err(PluginError::LoadError(format!(
-        "Plugin directory name '{}' does not match plugin.json name '{}'",
-        name, config.name
+        "Plugin directory name '{}' does not match {} name '{}'",
+        name,
+        PLUGIN_CONFIG_FILE,
+        config.name
       )));
     }
 

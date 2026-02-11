@@ -3,9 +3,9 @@ mod plugin;
 use config::load_config;
 use log::{debug, info};
 use plugin::PluginManager;
-use shared_types::{
-  Provider, ProviderError, config::ConfigData, config::ConfigError, plugin::PluginError,
-};
+use shared_types::{Provider, ProviderError};
+use shared_types::config::{ConfigData, ConfigError};
+use shared_types::plugin::PluginError;
 use std::sync::{Arc, Once};
 
 static INIT: Once = Once::new();
