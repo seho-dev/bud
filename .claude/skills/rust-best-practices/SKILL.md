@@ -302,10 +302,34 @@ impl ConfigBuilder {
 
 - ✅ **MUST** write unit tests for all new functions and types
 - ✅ **MUST** mock external dependencies (APIs, databases, file systems)
-- ✅ **MUST** use the built-in `#[test]` attribute and `cargo test`
+- ✅ **MUST** use `#[test_log::test]` instead of `#[test]` for test functions to enable logging output
 - Follow the Arrange-Act-Assert pattern
 - Do not commit commented-out tests
 - Use `#[cfg(test)]` modules for test code
+
+### Test Logging Setup
+
+**Setup**:
+1. Add to workspace `Cargo.toml`:
+   ```toml
+   [workspace.dependencies]
+   test-log = "0.2"
+   ```
+
+2. Add to crate's `Cargo.toml`:
+   ```toml
+   [dev-dependencies]
+   test-log = { workspace = true }
+   ```
+
+3. Use `#[test_log::test]` instead of `#[test]`:
+   ```rust
+   #[test_log::test]
+   fn test_my_function() {
+       // test code
+   }
+   ```
+
 
 ### Example
 
@@ -314,7 +338,7 @@ impl ConfigBuilder {
 mod tests {
     use super::*;
 
-    #[test]
+    #[test_log::test]  // ✅ Use test_log::test instead of #[test]
     fn test_calculate_total() {
         // Arrange
         let items = vec![10.0, 20.0];

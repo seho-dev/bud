@@ -8,7 +8,7 @@ fn get_fixture_dir() -> PathBuf {
     .join("fixtures")
 }
 
-#[test]
+#[test_log::test]
 fn test_parse_valid_config() {
   let fixture_dir = get_fixture_dir();
 

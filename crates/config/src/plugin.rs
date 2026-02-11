@@ -59,6 +59,7 @@ pub fn load_plugin_config<P: AsRef<Path>>(plugin_dir: P) -> Result<PluginConfigD
   let config_path = plugin_dir.as_ref().join(PLUGIN_CONFIG_FILE);
 
   if !config_path.exists() {
+    error!("Plugin config file not found: {}", config_path.display());
     return Err(ConfigError::FileNotFound(config_path.display().to_string()));
   }
 
@@ -137,8 +138,8 @@ pub fn load_all_plugins<P: AsRef<Path>>(
 
         if config_name != plugin_name {
           warn!(
-            "Plugin directory name '{}' does not match plugin.json name '{}'",
-            plugin_name, config_name
+            "Plugin directory name '{}' does not match {} name '{}'",
+            plugin_name, PLUGIN_CONFIG_FILE, config_name
           );
         }
 

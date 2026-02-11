@@ -134,7 +134,7 @@ mod tests {
     }
   }
 
-  #[test]
+  #[test_log::test]
   fn test_plugin_manager_new() {
     let config = Arc::new(create_test_config());
     let manager = PluginManager::new(config);
@@ -146,7 +146,7 @@ mod tests {
     assert_eq!(manager.config.description, "A test application");
   }
 
-  #[test]
+  #[test_log::test]
   fn test_plugin_manager_get_all() {
     let config = Arc::new(create_test_config());
     let mut manager =
@@ -159,9 +159,11 @@ mod tests {
     match result {
       Ok(_count) => {
         // Successfully loaded plugins (directory exists)
+        println!("Successfully loaded plugins, count: {}", _count);
       }
       Err(PluginError::LoadError(_)) => {
         // Expected: plugins directory doesn't exist in test environment
+        println!("Plugins directory doesn't exist (expected in test environment)");
       }
       Err(e) => {
         panic!("Unexpected error type: {:?}", e);
