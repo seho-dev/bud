@@ -8,7 +8,7 @@ pub struct ConfigData {
   pub description: String,
 }
 
-#[derive(Debug, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Deserialize, PartialEq)]
 pub struct PluginConfigData {
   pub name: String,
   pub version: String,

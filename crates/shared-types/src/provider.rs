@@ -1,3 +1,5 @@
+use std::path::Path;
+
 /// Provider runtime error types.
 ///
 /// Unified error types for all Provider implementations.
@@ -6,6 +8,9 @@ pub enum ProviderError {
   /// Provider initialization failed.
   #[error("Init failed")]
   InitFailed,
+  /// Provider load failed.
+  #[error("Load failed")]
+  LoadFailed(String),
   /// Function injection into runtime instance failed.
   #[error("Function injection failed: {0}")]
   InjectionFailed(String),
@@ -72,6 +77,10 @@ pub enum ProviderValue {
 ///     Ok(())
 ///   }
 ///
+///   fn load<P: AsRef<Path>>(&self, path: P) -> Result<(), ProviderError> {
+///     Ok(())
+///   }
+///
 ///   fn inject(
 ///     &self,
 ///     _instance: &mut Self::Instance,
@@ -128,6 +137,15 @@ pub trait Provider: Send + Sync {
   ///
   /// Returns `ProviderError::InitFailed` if initialization fails.
   fn init(&self) -> Result<Self::Instance, ProviderError>;
+
+  /// Load plugin using the provider.
+  ///
+  /// Loads the plugin and returns an error if it fails.
+  ///
+  /// # Errors
+  ///
+  /// Returns `ProviderError::LoadFailed` if loading fails.
+  fn load<P: AsRef<Path>>(&self, path: P) -> Result<(), ProviderError>;
 
   /// Inject host functions into the runtime.
   ///

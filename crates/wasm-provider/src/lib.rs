@@ -1,5 +1,6 @@
 use log::info;
 use shared_types::{Provider, ProviderError, ProviderValue};
+use std::path::Path;
 use wasmtime::{Config, Engine};
 
 #[derive(Debug, Default)]
@@ -26,6 +27,18 @@ impl Provider for WasmProvider {
 
     info!("WasmProvider initialized successfully");
     Ok(engine)
+  }
+
+  fn load<P: AsRef<Path>>(&self, path: P) -> Result<(), ProviderError> {
+    let path = path.as_ref().join(Self::MAIN_FILE);
+    if !path.is_file() {
+      return Err(ProviderError::LoadFailed(format!(
+        "{} not found: {}",
+        Self::MAIN_FILE,
+        path.display()
+      )));
+    }
+    todo!()
   }
 
   fn inject(

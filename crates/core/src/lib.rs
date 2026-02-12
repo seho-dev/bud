@@ -1,11 +1,11 @@
-mod plugin;
+pub mod plugin;
 
 use config::load_config;
 use log::{debug, info};
 use plugin::PluginManager;
-use shared_types::{Provider, ProviderError};
 use shared_types::config::{ConfigData, ConfigError};
 use shared_types::plugin::PluginError;
+use shared_types::{Provider, ProviderError};
 use std::sync::{Arc, Once};
 
 static INIT: Once = Once::new();
@@ -55,7 +55,7 @@ pub enum BudCoreError {
 /// let core = BudCore::builder(provider).build()?;
 /// ```
 pub struct BudCoreBuilder<P: Provider> {
-  provider: P,
+  provider: Arc<P>,
 }
 
 impl<P: Provider> BudCoreBuilder<P> {
@@ -72,7 +72,9 @@ impl<P: Provider> BudCoreBuilder<P> {
   /// ```
   #[must_use]
   pub fn new(provider: P) -> Self {
-    BudCoreBuilder { provider }
+    BudCoreBuilder {
+      provider: Arc::new(provider),
+    }
   }
 
   /// Build a BudCore instance.
@@ -100,7 +102,7 @@ impl<P: Provider> BudCoreBuilder<P> {
       .init()
       .map_err(BudCoreError::ProviderInitFailed)?;
 
-    let plugin_manager = PluginManager::new(Arc::clone(&config))?;
+    let plugin_manager = PluginManager::new(Arc::clone(&config), Arc::clone(&self.provider))?;
 
     Ok(BudCore {
       package_name: config.name.clone(),
@@ -135,9 +137,9 @@ impl<P: Provider> BudCoreBuilder<P> {
 pub struct BudCore<P: Provider> {
   pub package_name: String,
   pub config: Arc<ConfigData>,
-  provider: P,
+  provider: Arc<P>,
   provider_instance: P::Instance,
-  plugin_manager: PluginManager,
+  plugin_manager: PluginManager<P>,
 }
 
 impl<P: Provider> BudCore<P> {
@@ -183,5 +185,20 @@ impl<P: Provider> BudCore<P> {
   /// ```
   pub fn provider(&self) -> &P {
     &self.provider
+  }
+
+  /// Get a mutable reference to the PluginManager.
+  ///
+  /// Used for plugin operations like loading, getting plugin info, etc.
+  ///
+  /// # Examples
+  ///
+  /// ```
+  /// let mut core = BudCore::builder(WasmProvider::new()).build()?;
+  /// let manager = core.plugin_manager_mut();
+  /// let plugin_info = manager.get("my-plugin")?;
+  /// ```
+  pub fn plugin_manager_mut(&mut self) -> &mut plugin::PluginManager<P> {
+    &mut self.plugin_manager
   }
 }

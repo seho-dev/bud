@@ -15,6 +15,7 @@ config = { path = "../config" }
 
 [dev-dependencies]
 test-log = { workspace = true }
+wasm-provider = { path = "../wasm-provider" }
 
 [lib]
 path = "src/lib.rs"

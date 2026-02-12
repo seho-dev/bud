@@ -1,3 +1,3 @@
 mod manager;
 
-pub use manager::PluginManager;
+pub use manager::{PluginInfo, PluginManager};

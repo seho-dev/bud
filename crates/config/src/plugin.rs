@@ -89,6 +89,9 @@ fn parse_plugin_config<P: AsRef<Path>>(path: P) -> Result<PluginConfigData, Conf
 
 /// Loads all plugin configurations from the plugins directory
 ///
+/// This function only loads and validates plugin configuration files (plugin.json),
+/// not the actual plugin runtime files.
+///
 /// # Arguments
 ///
 /// * `plugins_dir` - Path to the plugins root directory
@@ -106,7 +109,7 @@ fn parse_plugin_config<P: AsRef<Path>>(path: P) -> Result<PluginConfigData, Conf
 ///
 /// Individual plugin failures are logged (ERROR level) and skipped without interrupting
 /// the overall loading process. Only returns an error if all plugins fail to load.
-pub fn load_all_plugins<P: AsRef<Path>>(
+pub fn load_all_plugin_configs<P: AsRef<Path>>(
   plugins_dir: P,
 ) -> Result<HashMap<String, PluginConfigData>, ConfigError> {
   let plugins_dir = plugins_dir.as_ref();
@@ -143,7 +146,7 @@ pub fn load_all_plugins<P: AsRef<Path>>(
       .and_then(|n| n.to_str())
       .unwrap_or("unknown");
 
-    match load_plugin(&path, plugin_name) {
+    match load_plugin_config_validated(&path, plugin_name) {
       Ok(config) => {
         let config_name = config.name.clone();
 
@@ -170,6 +173,10 @@ pub fn load_all_plugins<P: AsRef<Path>>(
 
 /// Loads plugin configuration from the specified directory and validates name matching
 ///
+/// This function only loads and validates the plugin configuration file (plugin.json),
+/// not the actual plugin runtime files. It additionally validates that the plugin name
+/// in the configuration matches the expected name (typically the directory name).
+///
 /// # Arguments
 ///
 /// * `plugin_dir` - Path to the plugin directory
@@ -185,7 +192,7 @@ pub fn load_all_plugins<P: AsRef<Path>>(
 /// - JSON parse failure: `ConfigError::ParseError`
 /// - Schema validation failure: `ConfigError::ValidationError`
 /// - Name mismatch: `ConfigError::ValidationError`
-pub fn load_plugin<P: AsRef<Path>>(
+pub fn load_plugin_config_validated<P: AsRef<Path>>(
   plugin_dir: P,
   expected_name: &str,
 ) -> Result<PluginConfigData, ConfigError> {
