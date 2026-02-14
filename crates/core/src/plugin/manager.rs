@@ -214,4 +214,19 @@ mod tests {
     let result = manager.get("test-plugin");
     assert!(result.is_ok());
   }
+
+  #[test_log::test]
+  fn test_plugin_manager_load() {
+    let config = Arc::new(create_test_config());
+    let provider = Arc::new(WasmProvider::new());
+
+    // Initialize the provider before using it
+    provider.init().expect("Failed to initialize provider");
+
+    let mut manager = PluginManager::new(Arc::clone(&config), Arc::clone(&provider))
+      .expect("Failed to create PluginManager");
+
+    let result = manager.load("test-plugin");
+    assert!(result.is_ok());
+  }
 }

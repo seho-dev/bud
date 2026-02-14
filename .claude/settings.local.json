@@ -3,6 +3,7 @@
     "allow": [
       "mcp__sequentialthinking__sequentialthinking",
       "Bash(cargo test)",
+      "Skill(rust-best-practices)",
       "Skill(superpowers:brainstorming)",
       "Skill(superpowers:writing-plans)",
       "Bash(cargo check)",
