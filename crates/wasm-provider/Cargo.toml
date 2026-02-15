@@ -8,6 +8,7 @@ thiserror = { workspace = true }
 log = { workspace = true }
 shared-types = { path = "../shared-types" }
 wasmtime = "41"
+wasmtime-wasi = "41.0.3"
 
 [lib]
 path = "src/lib.rs"
