@@ -1,6 +1,8 @@
 use config::{load_all_plugin_configs, load_plugin_config_validated};
 use directories::ProjectDirs;
+use log::error;
 use shared_types::Provider;
+use shared_types::ProviderValue;
 use shared_types::config::{ConfigData, PluginConfigData};
 use shared_types::plugin::PluginError;
 use std::{collections::HashMap, path::PathBuf, sync::Arc};
@@ -132,6 +134,37 @@ impl<P: Provider> PluginManager<P> {
     Ok(())
   }
 
+  pub fn invoke(
+    &mut self,
+    name: &str,
+    function: &str,
+    args: Vec<ProviderValue>,
+  ) -> Result<ProviderValue, PluginError> {
+    let _plugin_info = self.get(name)?;
+
+    // Check if plugin is loaded
+    self
+      .provider
+      .with_plugins(|plugins| {
+        if !plugins.contains_key(name) {
+          let msg = format!(
+            "Plugin '{}' not found, You must load the plugin first",
+            name
+          );
+          error!("{}", msg);
+          return Err(PluginError::LoadError(msg));
+        }
+        Ok(())
+      })
+      .map_err(|e| PluginError::InvokeError(e.to_string()))??;
+
+    // Invoke the function
+    self
+      .provider
+      .invoke(name, function, args)
+      .map_err(|e| PluginError::InvokeError(e.to_string()))
+  }
+
   /// Creates a new `PluginManager` instance
   ///
   /// # Arguments
@@ -228,5 +261,29 @@ mod tests {
 
     let result = manager.load("test-plugin");
     assert!(result.is_ok());
+  }
+
+  #[test_log::test]
+  fn test_plugin_manager_invoke() {
+    let config = Arc::new(create_test_config());
+    let provider = Arc::new(WasmProvider::new());
+
+    // Initialize the provider before using it
+    provider.init().expect("Failed to initialize provider");
+
+    let mut manager = PluginManager::new(Arc::clone(&config), Arc::clone(&provider))
+      .expect("Failed to create PluginManager");
+
+    manager.load("test-plugin").expect("Failed to load plugin");
+
+    let result = manager.invoke(
+      "test-plugin",
+      "Sum",
+      vec![ProviderValue::I32(1), ProviderValue::I32(2)],
+    );
+
+    assert!(result.is_ok(), "Plugin invocation should succeed");
+    let value = result.unwrap();
+    assert_eq!(value, ProviderValue::I32(3), "Sum(1, 2) should return 3");
   }
 }

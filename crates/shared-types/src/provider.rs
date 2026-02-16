@@ -1,5 +1,5 @@
+use std::collections::HashMap;
 use std::path::Path;
-
 /// Provider runtime error types.
 ///
 /// Unified error types for all Provider implementations.
@@ -28,7 +28,7 @@ pub enum ProviderError {
 /// Unified value type across different runtime environments.
 ///
 /// Supports primitive and composite types for WASM, Bun, Node, etc.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ProviderValue {
   /// Null value.
   Null,
@@ -94,7 +94,7 @@ pub enum ProviderValue {
 ///
 ///   fn invoke(
 ///     &self,
-///     _instance: &mut Self::Instance,
+///     _plugin_name: &str,
 ///     _function: &str,
 ///     _args: Vec<ProviderValue>,
 ///   ) -> Result<ProviderValue, ProviderError> {
@@ -115,6 +115,8 @@ pub trait Provider: Send + Sync {
   /// - `BunProvider` returns `bun::JsGlobalObject`
   type Instance;
 
+  type PluginInstance;
+
   /// Provider's main entry file (compile-time constant).
   ///
   /// Defines the main entry file loaded by the provider.
@@ -128,6 +130,10 @@ pub trait Provider: Send + Sync {
   /// - Can be used in generic constraints
   /// - Clearer semantics (explicitly constant)
   const MAIN_FILE: &'static str;
+
+  fn with_plugins<F, R>(&self, f: F) -> Result<R, ProviderError>
+  where
+    F: FnOnce(&HashMap<String, Self::PluginInstance>) -> R;
 
   /// Initialize the provider instance.
   ///
@@ -174,7 +180,7 @@ pub trait Provider: Send + Sync {
   ///
   /// # Arguments
   ///
-  /// * `instance` - Provider's runtime instance
+  /// * `plugin_name` - Name of the loaded plugin
   /// * `function` - Function name to invoke
   /// * `args` - Function arguments
   ///
@@ -183,7 +189,7 @@ pub trait Provider: Send + Sync {
   /// Returns `ProviderError::InvocationFailed` if invocation fails.
   fn invoke(
     &self,
-    instance: &mut Self::Instance,
+    plugin_name: &str,
     function: &str,
     args: Vec<ProviderValue>,
   ) -> Result<ProviderValue, ProviderError>;

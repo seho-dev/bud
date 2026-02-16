@@ -13,6 +13,9 @@ pub enum PluginError {
   #[error("Failed to determine project directories")]
   ProjectDirsError,
 
+  #[error("Failed to invoke plugin: {0}")]
+  InvokeError(String),
+
   #[error("IO error: {0}")]
   IoError(#[from] std::io::Error),
 }
