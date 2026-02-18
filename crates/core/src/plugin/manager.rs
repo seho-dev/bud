@@ -1,11 +1,13 @@
-use config::{load_all_plugin_configs, load_plugin_config_validated};
+use config::{load_all_plugin_configs, load_plugin_config, load_plugin_config_validated};
 use directories::ProjectDirs;
 use log::error;
 use shared_types::Provider;
 use shared_types::ProviderValue;
 use shared_types::config::{ConfigData, PluginConfigData};
 use shared_types::plugin::PluginError;
+use std::fs::create_dir_all;
 use std::{collections::HashMap, path::PathBuf, sync::Arc};
+use utils::copy_dir_recursive;
 
 /// Manages plugin lifecycle and operations
 ///
@@ -42,6 +44,53 @@ impl<P: Provider> PluginManager<P> {
       ProjectDirs::from("com", "bud", name).ok_or(PluginError::ProjectDirsError)?;
 
     Ok(project_path.data_dir().to_path_buf())
+  }
+
+  /// Installs a plugin from the given directory into the project data path
+  ///
+  /// Reads `plugin.json` from `dir_path` to determine the plugin name, then recursively
+  /// copies all files and subdirectories to `project_data_path/<plugin_name>/`.
+  ///
+  /// # Arguments
+  ///
+  /// * `dir_path` - Path to the source directory containing plugin files and `plugin.json`
+  ///
+  /// # Returns
+  ///
+  /// Returns `Ok(())` on successful installation
+  ///
+  /// # Errors
+  ///
+  /// * `PluginError::InstallError` - If `dir_path` is not a directory, or `plugin.json` is missing/invalid
+  /// * `PluginError::IoError` - If directory creation or file copy operations fail
+  pub fn install(&mut self, dir_path: &PathBuf) -> Result<(), PluginError> {
+    if !dir_path.is_dir() {
+      let msg = format!("Path is not a directory: {}", dir_path.display());
+      error!("{}", msg);
+      return Err(PluginError::InstallError(msg));
+    }
+
+    let plugin_config = load_plugin_config(&dir_path)
+      .map_err(|e| PluginError::InstallError(format!("Failed to read plugin config: {}", e)))?;
+
+    let plugin_name = plugin_config.name.clone();
+
+    let dest_dir = self.project_data_path.join(&plugin_name);
+
+    // Check if plugin is already installed
+    if dest_dir.is_dir() {
+      let msg = format!("plugin {} is already installed", plugin_name);
+      error!("{}", msg);
+      return Err(PluginError::InstallError(msg));
+    }
+
+    create_dir_all(&dest_dir)?;
+
+    copy_dir_recursive(&dir_path, &dest_dir)?;
+
+    self.plugin_cache.insert(plugin_name, plugin_config);
+
+    Ok(())
   }
 
   /// Loads all plugin configurations and populates the cache
@@ -208,6 +257,24 @@ mod tests {
       version: "0.1.0".to_string(),
       description: "A test application".to_string(),
     }
+  }
+
+  #[test_log::test]
+  fn test_plugin_install() {
+    let config = Arc::new(create_test_config());
+    let provider = Arc::new(WasmProvider::new());
+    let mut manager = PluginManager::new(config, provider).unwrap();
+
+    let path = workspace_root::get_workspace_root().join("example/test-plugin");
+    let target = manager.project_data_path.join("test-plugin");
+
+    if target.exists() {
+      std::fs::remove_dir_all(&target).unwrap();
+    }
+
+    manager.install(&path).unwrap();
+
+    assert!(target.exists());
   }
 
   #[test_log::test]

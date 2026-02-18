@@ -10,6 +10,9 @@ pub enum PluginError {
   #[error("Failed to load plugin: {0}")]
   LoadError(String),
 
+  #[error("Failed to install plugin: {0}")]
+  InstallError(String),
+
   #[error("Failed to determine project directories")]
   ProjectDirsError,
 

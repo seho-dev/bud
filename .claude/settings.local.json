@@ -8,7 +8,8 @@
       "Skill(superpowers:writing-plans)",
       "Bash(cargo check)",
       "mcp__context7__query-docs",
-      "mcp__sequential-thinking__sequentialthinking"
+      "mcp__sequential-thinking__sequentialthinking",
+      "mcp__context7__resolve-library-id"
     ],
     "deny": []
   }

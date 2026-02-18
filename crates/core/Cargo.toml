@@ -12,10 +12,12 @@ shared-types = { path = "../shared-types" }
 directories = "6.0"
 env_logger = "0.10.0"
 config = { path = "../config" }
+utils = { path = "../utils" }
 
 [dev-dependencies]
 test-log = { workspace = true }
 wasm-provider = { path = "../wasm-provider" }
+workspace_root = "0.2"
 
 [lib]
 path = "src/lib.rs"

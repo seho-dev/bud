@@ -390,7 +390,9 @@ dependencies = [
  "shared-types",
  "test-log",
  "thiserror 2.0.18",
+ "utils",
  "wasm-provider",
+ "workspace_root",
 ]
 
 [[package]]
@@ -942,6 +944,12 @@ dependencies = [
  "typenum",
  "version_check",
 ]
+
+[[package]]
+name = "get_dir"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a7be53a543a609b266f8ed4237af223fa96bdaa54d69fd6845c71a421a4a4748"
 
 [[package]]
 name = "getrandom"
@@ -2606,6 +2614,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "06abde3611657adf66d383f00b093d7faecc7fa57071cce2578660c9f1010821"
 
 [[package]]
+name = "utils"
+version = "0.1.0"
+
+[[package]]
 name = "uuid"
 version = "1.18.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3611,6 +3623,15 @@ dependencies = [
  "log",
  "thiserror 1.0.69",
  "wast 35.0.2",
+]
+
+[[package]]
+name = "workspace_root"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "70d804157714956faa87af2ccf3ea2917a7e588c84c6e0a473311c1fca161818"
+dependencies = [
+ "get_dir",
 ]
 
 [[package]]
