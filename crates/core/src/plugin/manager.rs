@@ -251,40 +251,35 @@ mod tests {
   use super::*;
   use wasm_provider::WasmProvider;
 
-  fn create_test_config() -> ConfigData {
-    ConfigData {
+  fn create_manager() -> PluginManager<WasmProvider> {
+    let config = Arc::new(ConfigData {
       name: "test-app".to_string(),
       version: "0.1.0".to_string(),
       description: "A test application".to_string(),
+    });
+    let provider = Arc::new(WasmProvider::new());
+    PluginManager::new(config, provider).unwrap()
+  }
+
+  fn setup_test_plugin(manager: &mut PluginManager<WasmProvider>) {
+    let path = workspace_root::get_workspace_root().join("example/test-plugin");
+    let target = manager.project_data_path.join("test-plugin");
+    if target.exists() {
+      std::fs::remove_dir_all(&target).unwrap();
     }
+    manager.install(&path).unwrap();
   }
 
   #[test_log::test]
   fn test_plugin_install() {
-    let config = Arc::new(create_test_config());
-    let provider = Arc::new(WasmProvider::new());
-    let mut manager = PluginManager::new(config, provider).unwrap();
-
-    let path = workspace_root::get_workspace_root().join("example/test-plugin");
-    let target = manager.project_data_path.join("test-plugin");
-
-    if target.exists() {
-      std::fs::remove_dir_all(&target).unwrap();
-    }
-
-    manager.install(&path).unwrap();
-
-    assert!(target.exists());
+    let mut manager = create_manager();
+    setup_test_plugin(&mut manager);
+    assert!(manager.project_data_path.join("test-plugin").exists());
   }
 
   #[test_log::test]
   fn test_plugin_manager_new() {
-    let config = Arc::new(create_test_config());
-    let provider = Arc::new(WasmProvider::new());
-    let manager = PluginManager::new(config, provider);
-
-    assert!(manager.is_ok());
-    let manager = manager.unwrap();
+    let manager = create_manager();
     assert_eq!(manager.config.name, "test-app");
     assert_eq!(manager.config.version, "0.1.0");
     assert_eq!(manager.config.description, "A test application");
@@ -292,55 +287,33 @@ mod tests {
 
   #[test_log::test]
   fn test_plugin_manager_get_all() {
-    let config = Arc::new(create_test_config());
-    let provider = Arc::new(WasmProvider::new());
-    let mut manager = PluginManager::new(config, provider).expect("Failed to create PluginManager");
-
+    let mut manager = create_manager();
     let result = manager.get_all();
-
-    // Either succeeds or fails with LoadError (plugins directory may not exist)
     assert!(result.is_ok() || matches!(result, Err(PluginError::LoadError(_))));
   }
 
   #[test_log::test]
   fn test_plugin_manager_get() {
-    let config = Arc::new(create_test_config());
-    let provider = Arc::new(WasmProvider::new());
-
-    let mut manager = PluginManager::new(Arc::clone(&config), Arc::clone(&provider))
-      .expect("Failed to create PluginManager");
-
-    // Use a plugin name that definitely doesn't exist
+    let mut manager = create_manager();
+    setup_test_plugin(&mut manager);
     let result = manager.get("test-plugin");
     assert!(result.is_ok());
   }
 
   #[test_log::test]
   fn test_plugin_manager_load() {
-    let config = Arc::new(create_test_config());
-    let provider = Arc::new(WasmProvider::new());
-
-    // Initialize the provider before using it
-    provider.init().expect("Failed to initialize provider");
-
-    let mut manager = PluginManager::new(Arc::clone(&config), Arc::clone(&provider))
-      .expect("Failed to create PluginManager");
-
+    let mut manager = create_manager();
+    manager.provider.init().expect("Failed to initialize provider");
+    setup_test_plugin(&mut manager);
     let result = manager.load("test-plugin");
     assert!(result.is_ok());
   }
 
   #[test_log::test]
   fn test_plugin_manager_invoke() {
-    let config = Arc::new(create_test_config());
-    let provider = Arc::new(WasmProvider::new());
-
-    // Initialize the provider before using it
-    provider.init().expect("Failed to initialize provider");
-
-    let mut manager = PluginManager::new(Arc::clone(&config), Arc::clone(&provider))
-      .expect("Failed to create PluginManager");
-
+    let mut manager = create_manager();
+    manager.provider.init().expect("Failed to initialize provider");
+    setup_test_plugin(&mut manager);
     manager.load("test-plugin").expect("Failed to load plugin");
 
     let result = manager.invoke(
