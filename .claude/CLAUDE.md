@@ -20,6 +20,9 @@ Core runtime that integrates Provider and configuration management, providing th
 ### test-harness (Testing Utilities)
 Integration tests and example programs demonstrating how to use BudCore with WasmProvider.
 
+### utils (Utility Functions)
+Common utility functions shared across the project, including file system operations like recursive directory copying.
+
 ## Architecture Design
 
 ### Layered Architecture
