@@ -12,7 +12,7 @@ lto = true
 strip = "symbols"
 
 [workspace]
-members = ["crates/*"]
+members = ["crates/*", "sdk/rust", "example/*"]
 resolver = "2"
 
 [workspace.dependencies]

@@ -6,8 +6,10 @@ edition = "2024"
 [dependencies]
 thiserror = { workspace = true }
 log = { workspace = true }
+serde_json = { workspace = true }
 shared-types = { path = "../shared-types" }
-wasmtime = "41"
+utils = { path = "../utils" }
+wasmtime = { version = "41", features = ["component-model"] }
 wasmtime-wasi = "41.0.3"
 
 [lib]

@@ -34,14 +34,10 @@ pub enum ProviderValue {
   Null,
   /// Boolean value.
   Bool(bool),
-  /// 32-bit signed integer.
-  I32(i32),
-  /// 64-bit signed integer.
-  I64(i64),
-  /// 32-bit floating point.
-  F32(f32),
-  /// 64-bit floating point.
-  F64(f64),
+  /// Integer value (i64).
+  Int(i64),
+  /// Float value (f64).
+  Float(f64),
   /// String value.
   String(String),
   /// Array of values.

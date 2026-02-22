@@ -1,3 +1,5 @@
+pub mod provider_json;
+
 use std::io;
 use std::path::Path;
 

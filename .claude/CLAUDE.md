@@ -9,7 +9,7 @@
 Define core types and interfaces shared across all crates, including `Provider` trait and common data structures.
 
 ### wasm-provider (Provider Implementation Layer)
-WASM Provider implementation based on wasmtime for loading and executing WASM plugins.
+WASM Provider implementation based on wasmtime Component Model. Loads and executes WASM component plugins via the WIT-defined interface in `wit/bud.wit`.
 
 ### config (Configuration Management Layer)
 Configuration file loading, parsing, and validation for both host application and plugin configurations.
@@ -21,11 +21,33 @@ Core runtime that integrates Provider and configuration management, providing th
 Integration tests and example programs demonstrating how to use BudCore with WasmProvider.
 
 ### utils (Utility Functions)
-Common utility functions shared across the project, including file system operations like recursive directory copying.
+Common utility functions shared across the project, including file system operations and `provider_json` module for serializing `ProviderValue` to/from JSON (used by wasm-provider for WIT `on-invoke` args).
 
-## Architecture Design
+## Plugin Interface Contract
 
-### Layered Architecture
+`wit/bud.wit` is the **single source of truth** for the host↔plugin interface. All SDK bindings for every language are generated from this file by CI and published automatically.
+
+```
+wit/bud.wit
+    ├── wasmtime::component::bindgen!()  →  host-side bindings (wasm-provider, compile-time)
+    ├── wit-bindgen go     →  bud-sdk-go          (CI generates & publishes)
+    └── wit-bindgen c      →  bud-sdk-c           (CI generates & publishes)
+```
+
+## Runtime Data Flow
+
+```
+Host App → BudCore::invoke(plugin, fn, args)
+    → WasmProvider: args serialized to JSON string
+    → WASM Component: on_invoke(fn, args_json) → result_json
+    → WasmProvider: result deserialized to ProviderValue
+    → Host App receives ProviderValue
+```
+
+JSON is used for invoke args/result because WIT does not support recursive variant types (`ProviderValue` can nest itself).
+
+## Layered Architecture
+
 ```
 ┌─────────────────────────────────────┐
 │        Host Application              │
@@ -48,12 +70,6 @@ Common utility functions shared across the project, including file system operat
 │     Provider trait + data types      │
 └─────────────────────────────────────┘
 ```
-
-### Core Features
-- **Provider Neutral**: Support multiple runtimes through trait abstraction (currently WASM)
-- **Configuration Driven**: Separate management of host config (config.json) and plugin config (plugin.json)
-- **Generic Architecture**: BudCore accepts any Provider implementation via generic parameters
-- **Modular Design**: Clear responsibilities and dependencies for each crate
 
 ## Development Guidelines
 

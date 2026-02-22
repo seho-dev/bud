@@ -1,0 +1,23 @@
+package bud:sdk@0.1.0;
+
+world bud-plugin {
+  import host;
+  export plugin;
+}
+
+interface host {
+  enum log-level {
+    debug,
+    info,
+    warn,
+    error,
+  }
+
+  log: func(level: log-level, msg: string);
+  get-config: func(key: string) -> option<string>;
+}
+
+interface plugin {
+  on-load: func() -> result<_, string>;
+  on-invoke: func(function: string, args-json: string) -> result<string, string>;
+}
