@@ -1,0 +1,5 @@
+[alias]
+sync-wit = "run -p xtask -- sync-wit"
+sdk-rust = "run -p xtask -- sdk-rust"
+sum-plugin = "run -p xtask -- sum-plugin"
+plugin-dev = "run -p xtask -- plugin-dev"

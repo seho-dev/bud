@@ -21,7 +21,15 @@ Core runtime that integrates Provider and configuration management, providing th
 Integration tests and example programs demonstrating how to use BudCore with WasmProvider.
 
 ### utils (Utility Functions)
-Common utility functions shared across the project, including file system operations and `provider_json` module for serializing `ProviderValue` to/from JSON (used by wasm-provider for WIT `on-invoke` args).
+Shared utilities crate that provides common helper tools and abstraction functions used across the project.
+
+### xtask (Build Automation Layer)
+Internal task runner crate for developer workflows that must keep WIT and WASM artifacts in sync.
+
+- `cargo sync-wit`: sync `wit/bud.wit` to `sdk/rust/wit/bud.wit` (required for published SDK macro expansion)
+- `cargo sdk-rust`: sync WIT and build `bud-plugin-sdk`
+- `cargo sum-plugin`: sync WIT, build `example/sum-plugin`, and update `example/sum-plugin/main.wasm`
+- `cargo plugin-dev`: one-command workflow that runs SDK build + sum-plugin WASM sync
 
 ## Plugin Interface Contract
 
@@ -30,8 +38,8 @@ Common utility functions shared across the project, including file system operat
 ```
 wit/bud.wit
     ├── wasmtime::component::bindgen!()  →  host-side bindings (wasm-provider, compile-time)
-    ├── wit-bindgen go     →  bud-sdk-go          (CI generates & publishes)
-    └── wit-bindgen c      →  bud-sdk-c           (CI generates & publishes)
+    ├── wit-bindgen rust   →  bud-plugin-sdk (sdk/rust)         
+    ├── wit-bindgen go     →  bud-plugin-sdk-go (Not realized)         
 ```
 
 ## Runtime Data Flow

@@ -10,7 +10,7 @@ use wasmtime_wasi::{WasiCtx, WasiCtxBuilder, WasiCtxView, WasiView};
 
 wasmtime::component::bindgen!({
     world: "bud-plugin",
-    path: "./wit/bud.wit",
+    path: "../../wit/bud.wit",
 });
 
 use bud::sdk::host::{Host, LogLevel};
@@ -233,7 +233,7 @@ impl Provider for WasmProvider {
       .map_err(|e| ProviderError::InvocationFailed(e.to_string()))?
       .map_err(ProviderError::InvocationFailed)?;
 
-    let value: serde_json::Value = serde_json::from_str(&result_json)
+    let value = serde_json::from_str(&result_json)
       .map_err(|e| ProviderError::InvocationFailed(e.to_string()))?;
 
     Ok(json_to_provider_value(&value))

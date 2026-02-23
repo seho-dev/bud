@@ -9,3 +9,5 @@ crate-type = ["cdylib"]
 [dependencies]
 bud-plugin-sdk = { path = "../../sdk/rust" }
 serde_json = "1.0"
+
+[workspace]
