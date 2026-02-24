@@ -5,6 +5,10 @@
         "editor.formatOnSave": true,
         "editor.defaultFormatter": "rust-lang.rust-analyzer"
     },
+    "rust-analyzer.linkedProjects": [
+        "Cargo.toml",
+        "example/sum-plugin/Cargo.toml"
+    ],
     "rust-analyzer.formatting.engine": "rustfmt",
     "rust-analyzer.formatting.saveTimeout": 5
 }

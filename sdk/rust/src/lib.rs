@@ -6,10 +6,11 @@ wit_bindgen::generate!({
 
 #[doc(hidden)]
 pub use exports as __exports;
-pub use serde_json;
 
 pub trait Plugin {
-  fn on_invoke(function: &str, args_json: &str) -> Result<String, String>;
+  fn on_invoke(function: &str, _args_json: &str) -> Result<String, String> {
+    Err(format!("unknown function: {}", function))
+  }
 }
 
 #[macro_export]
