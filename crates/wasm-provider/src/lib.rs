@@ -40,6 +40,11 @@ impl Host for PluginState {
     }
   }
 
+  fn emit(&mut self, event: String, data: String) {
+    println!("emit: {}", event);
+    println!("data: {}", data);
+  }
+
   fn get_config(&mut self, _key: String) -> Option<String> {
     None
   }

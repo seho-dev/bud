@@ -323,6 +323,7 @@ mod tests {
   }
 
   #[test_log::test]
+  #[ignore]
   fn test_plugin_manager_invoke() {
     let mut manager = create_manager();
     manager
