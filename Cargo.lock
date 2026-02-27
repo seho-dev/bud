@@ -381,6 +381,7 @@ dependencies = [
  "serde",
  "serde_json",
  "shared-types",
+ "tempfile",
  "test-log",
  "thiserror 2.0.18",
 ]

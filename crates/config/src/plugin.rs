@@ -30,12 +30,77 @@ static PLUGIN_SCHEMA: &str = r#"{
       "minLength": 1
     },
     "permissions": {
-      "type": "array",
-      "items": { "type": "string" },
-      "uniqueItems": true
+      "type": "object",
+      "properties": {
+        "stdio": {
+          "anyOf": [
+            { "type": "boolean" },
+            {
+              "type": "object",
+              "properties": {
+                "stdin":  { "type": "boolean" },
+                "stdout": { "type": "boolean" },
+                "stderr": { "type": "boolean" }
+              },
+              "additionalProperties": false
+            }
+          ]
+        },
+        "filesystem": {
+          "anyOf": [
+            { "type": "boolean" },
+            {
+              "type": "object",
+              "properties": {
+                "read":  { "type": "array", "items": { "type": "string" } },
+                "write": { "type": "array", "items": { "type": "string" } }
+              },
+              "additionalProperties": false
+            }
+          ]
+        },
+        "network": {
+          "anyOf": [
+            { "type": "boolean" },
+            {
+              "type": "object",
+              "properties": {
+                "allowed_hosts": { "type": "array", "items": { "type": "string" } }
+              },
+              "additionalProperties": false
+            }
+          ]
+        },
+        "env": {
+          "anyOf": [
+            { "type": "boolean" },
+            {
+              "type": "object",
+              "properties": {
+                "inherit": { "type": "boolean" },
+                "keys":    { "type": "array", "items": { "type": "string" } }
+              },
+              "additionalProperties": false
+            }
+          ]
+        },
+        "process": {
+          "anyOf": [
+            { "type": "boolean" },
+            {
+              "type": "object",
+              "properties": {
+                "exit": { "type": "boolean" }
+              },
+              "additionalProperties": false
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
     }
   },
-  "required": ["name", "version", "description", "author", "permissions"]
+  "required": ["name", "version", "description", "author"]
 }"#;
 
 static COMPILED_PLUGIN_SCHEMA: Lazy<JSONSchema> = Lazy::new(|| compile_schema(PLUGIN_SCHEMA));
