@@ -1,5 +1,5 @@
 use log::{error, info};
-use shared_types::{Provider, ProviderError, ProviderValue};
+use shared_types::{PluginConfigData, Provider, ProviderError, ProviderValue};
 use std::collections::HashMap;
 use std::path::Path;
 use std::sync::{Arc, Mutex, RwLock};
@@ -129,7 +129,7 @@ impl Provider for WasmProvider {
     Ok(new_instance)
   }
 
-  fn load<P: AsRef<Path>>(&self, path: P) -> Result<(), ProviderError> {
+  fn load<P: AsRef<Path>>(&self, path: P, config: &PluginConfigData) -> Result<(), ProviderError> {
     let plugin_dir = path.as_ref();
     let wasm_file = plugin_dir.join(Self::MAIN_FILE);
 

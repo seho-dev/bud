@@ -1,10 +1,10 @@
 use config::{load_all_plugin_configs, load_plugin_config, load_plugin_config_validated};
 use directories::ProjectDirs;
 use log::error;
-use shared_types::Provider;
-use shared_types::ProviderValue;
 use shared_types::config::{ConfigData, PluginConfigData};
 use shared_types::plugin::PluginError;
+use shared_types::Provider;
+use shared_types::ProviderValue;
 use std::fs::create_dir_all;
 use std::{collections::HashMap, path::PathBuf, sync::Arc};
 use utils::copy_dir_recursive;
@@ -44,6 +44,16 @@ impl<P: Provider> PluginManager<P> {
       ProjectDirs::from("com", "bud", name).ok_or(PluginError::ProjectDirsError)?;
 
     Ok(project_path.data_dir().to_path_buf())
+  }
+
+  /// Gets the project data directory path
+  pub fn project_data_path(&self) -> &PathBuf {
+    &self.project_data_path
+  }
+
+  /// Gets the config
+  pub fn config(&self) -> &ConfigData {
+    &self.config
   }
 
   /// Installs a plugin from the given directory into the project data path
@@ -177,8 +187,17 @@ impl<P: Provider> PluginManager<P> {
 
     self
       .provider
-      .load(&plugin_info.path)
+      .load(&plugin_info.path, &plugin_info.config)
       .map_err(|e| PluginError::LoadError(e.to_string()))?;
+
+    Ok(())
+  }
+
+  pub fn init(&self) -> Result<(), PluginError> {
+    self
+      .provider
+      .init()
+      .map_err(|e| PluginError::InitError(e.to_string()))?;
 
     Ok(())
   }
@@ -243,108 +262,5 @@ impl<P: Provider> PluginManager<P> {
       plugin_cache: HashMap::new(),
       provider,
     })
-  }
-}
-
-#[cfg(test)]
-mod tests {
-  use super::*;
-  use std::sync::Once;
-  use wasm_provider::WasmProvider;
-
-  static TEST_PLUGIN_SETUP: Once = Once::new();
-
-  fn create_manager() -> PluginManager<WasmProvider> {
-    let config = Arc::new(ConfigData {
-      name: "test-app".to_string(),
-      version: "0.1.0".to_string(),
-      description: "A test application".to_string(),
-    });
-    let provider = Arc::new(WasmProvider::new());
-    PluginManager::new(config, provider).unwrap()
-  }
-
-  fn setup_test_plugin_once() {
-    TEST_PLUGIN_SETUP.call_once(|| {
-      let mut manager = create_manager();
-      let path = workspace_root::get_workspace_root().join("example/sum-plugin");
-      let target = manager.project_data_path.join("sum-plugin");
-
-      if target.exists() {
-        std::fs::remove_dir_all(&target).expect("Failed to remove stale test plugin directory");
-      }
-
-      manager
-        .install(&path)
-        .expect("Failed to install test plugin during one-time setup");
-    });
-  }
-
-  #[test_log::test]
-  fn test_plugin_install() {
-    let manager = create_manager();
-    setup_test_plugin_once();
-    assert!(manager.project_data_path.join("sum-plugin").exists());
-  }
-
-  #[test_log::test]
-  fn test_plugin_manager_new() {
-    let manager = create_manager();
-    assert_eq!(manager.config.name, "test-app");
-    assert_eq!(manager.config.version, "0.1.0");
-    assert_eq!(manager.config.description, "A test application");
-  }
-
-  #[test_log::test]
-  fn test_plugin_manager_get_all() {
-    let mut manager = create_manager();
-    let result = manager.get_all();
-    assert!(result.is_ok() || matches!(result, Err(PluginError::LoadError(_))));
-  }
-
-  #[test_log::test]
-  fn test_plugin_manager_get() {
-    let mut manager = create_manager();
-    setup_test_plugin_once();
-    let result = manager.get("sum-plugin");
-    assert!(result.is_ok());
-  }
-
-  #[test_log::test]
-  fn test_plugin_manager_load() {
-    let mut manager = create_manager();
-    manager
-      .provider
-      .init()
-      .expect("Failed to initialize provider");
-    setup_test_plugin_once();
-    let result = manager.load("sum-plugin");
-    assert!(result.is_ok());
-  }
-
-  #[test_log::test]
-  #[ignore]
-  fn test_plugin_manager_invoke() {
-    let mut manager = create_manager();
-    manager
-      .provider
-      .init()
-      .expect("Failed to initialize provider");
-    setup_test_plugin_once();
-    manager.load("sum-plugin").expect("Failed to load plugin");
-
-    let result = manager.invoke(
-      "sum-plugin",
-      "Sum",
-      vec![ProviderValue::Int(1), ProviderValue::Int(2)],
-    );
-
-    assert!(
-      result.is_ok(),
-      "Plugin invocation should succeed: {:?}",
-      result
-    );
-    let value = result.unwrap();
-    assert_eq!(value, ProviderValue::Int(3), "Sum(1, 2) should return 3");
   }
 }

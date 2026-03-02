@@ -1,5 +1,7 @@
+use crate::config::PluginConfigData;
 use std::collections::HashMap;
 use std::path::Path;
+
 /// Provider runtime error types.
 ///
 /// Unified error types for all Provider implementations.
@@ -147,7 +149,7 @@ pub trait Provider: Send + Sync {
   /// # Errors
   ///
   /// Returns `ProviderError::LoadFailed` if loading fails.
-  fn load<P: AsRef<Path>>(&self, path: P) -> Result<(), ProviderError>;
+  fn load<P: AsRef<Path>>(&self, path: P, config: &PluginConfigData) -> Result<(), ProviderError>;
 
   /// Inject host functions into the runtime.
   ///
